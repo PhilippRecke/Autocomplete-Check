@@ -1,0 +1,25 @@
+{
+    "name": "FormFieldCheck",
+    "description": "Easily check autocomplete values on input-elements",
+    "version": "0.2",
+    "manifest_version": 3,
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Open PopUp"
+    },
+    "background": {
+        "service_worker": "service-worker.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "css": ["badges.css"],
+            "js": ["content-script.js"]
+        }
+    ],
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage"
+    ]
+}

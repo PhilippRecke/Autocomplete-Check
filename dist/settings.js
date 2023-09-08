@@ -1,0 +1,1 @@
+(()=>{"use strict";var e;null===(e=document.getElementById("saveBtn"))||void 0===e||e.addEventListener("click",(()=>{const e=document.getElementById("devModeChk").checked;chrome.storage.local.set({"acc.devMode":e}),console.log("saved setting dev mode"),console.log(`dev mode: ${e}`)}))})();

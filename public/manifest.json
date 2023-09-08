@@ -17,6 +17,7 @@
             "js": ["content-script.js"]
         }
     ],
+    "options_page": "settings.html",
     "permissions": [
         "activeTab",
         "scripting",

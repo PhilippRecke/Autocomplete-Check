@@ -1,3 +1,14 @@
+// set the checkbox state when the popup is opened
+const highlightCheckbox = document.getElementById("chk.setHighlight") as HTMLInputElement | null;
+const highlightStateObj = chrome.storage.local.get(["acc.highlight"], items => {
+    const highlightState = items["acc.highlight"] as boolean;
+    if (highlightCheckbox !== null) {
+        highlightCheckbox.checked = highlightState;
+    }
+});
+
+
+
 const checkForContentScript = async (tabId: number) => {
     return new Promise((resolve) => {
         chrome.tabs.sendMessage(tabId, { msg: "acc.isContentScript" }, (result) => {
@@ -11,11 +22,14 @@ const checkForContentScript = async (tabId: number) => {
 }
 
 
-const toggleHighlight = async () => {
 
-    const oldHighlightState = await chrome.storage.local.get(["acc.highlight"]);
 
-    await chrome.storage.local.set({ "acc.highlight": !oldHighlightState["acc.highlight"] })
+const setHighlight = async (e: Event) => {
+    // get state of checkbox from change-event
+    const checkboxState = (e.target as HTMLInputElement).checked;
+
+    // save new state in storage
+    await chrome.storage.local.set({ "acc.highlight": checkboxState })
 
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
@@ -27,8 +41,7 @@ const toggleHighlight = async () => {
 
 
 document.addEventListener("DOMContentLoaded", () => {
-    //document.getElementById("btn.toggleHighlight").addEventListener("click", toggleHighlight);
-    document.getElementById("chk.toggleHighlight")?.addEventListener("change", toggleHighlight);
+    document.getElementById("chk.setHighlight")?.addEventListener("change", e => setHighlight(e));
 });
 
 

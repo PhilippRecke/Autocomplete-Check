@@ -1,0 +1,21 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#wrap {
+    margin: 0 auto;
+    max-width: 350px;
+    padding: 12px;
+}
+
+form {
+    background-color: rgb(220 220 220);
+    padding: 20px;
+    border-radius: 4px;
+}
+
+input {
+    width: calc(100% - 16px);
+    padding: 4px;
+    margin: 8px 0px;
+}

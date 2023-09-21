@@ -85,7 +85,7 @@
         "select": [2,6,8,21,22,33,34,36,38,39,40,41,45]
     },
     "byLabel_EN":{
-        "1": ["name"],
+        "1": ["name", "fullname"],
         "2": ["honorificprefix", "honorific", "prefix"],
         "3": ["givenname", "firstname", "forename", "callname"],
         "4": ["additionalname", "middlename"],
@@ -108,16 +108,16 @@
         "21": ["country", "countrycode"],
         "22": ["country", "countryname"],
         "23": ["postalcode", "zip", "zipcode", "postcode", "cedex"],
-        "24": ["ccname", "creditcardname", "name"],
+        "24": ["ccname", "creditcardname", "name", "nameoncard"],
         "25": ["ccgivenname", "creditcardgivenname", "givenname", "creditcardfirstname", "creditcardforename", "creditcardcallname", "firstname", "forename", "callname"],
         "26": ["ccadditionalname", "ccmiddlename", "creditcardadditionbalname", "creditcardmiddlename"],
         "27": ["ccfamilyname", "cclastname", "ccsurname", "creditcardfamilyname", "creditcardlastname", "creditcardsurname"],
-        "28": ["ccnumber", "creditcardnumber", "cardnumber"],
+        "28": ["ccnumber", "creditcardnumber", "cardnumber", "cardno"],
         "29": ["expirationdate", "expires", "expiration"],
         "30": ["expirationmonth", "expiresmonth"],
         "31": ["expirationyear", "expiresyear"],
         "32": ["securitycode", "security", "csc", "cardsecuritycode", "cvc", "cardvalidationcode", "cvv", "cardverificationvalue", "spc", "signaturepanelcode", "ccid", "creditcardid"],
-        "33": ["payment", "paymentprovider", "visa", "mastercard", "paypal"],
+        "33": ["payment", "paymentprovider", "provider", "visa", "mastercard", "paypal"],
         "34": ["transactioncurrency", "currency", "eur", "usd", "gbp", "chf"],
         "35": ["transactionamount", "amount"],
         "36": ["language"],
@@ -140,7 +140,7 @@
         "53": ["impp", "instantmessagingprotocol", "instantmessagingprotocolendpoint"]
     },
     "byLabel_DE":{
-        "1": ["name"],
+        "1": ["name", "vorundnachname"],
         "2": ["anrede", "titel", "prefix"],
         "3": ["vorname", "rufname"],
         "4": ["zweitname", "zwischenname", "mittelname"],
@@ -163,7 +163,7 @@
         "21": ["ländercode", "code"],
         "22": ["ländername", "landname", "land"],
         "23": ["postleitzahl", "plz"],
-        "24": ["kreditkartenname", "name"],
+        "24": ["kreditkartenname", "name", "namedeskarteninhabers"],
         "25": ["kreditkartenvorname", "vorname"],
         "26": ["kreditkartenzweitname", "kreditkartenzwischenname", "kreditkartenmittelname", "zweitname", "zwischenname", "mittelname"],
         "27": ["kreditkartennachname"],
@@ -193,5 +193,13 @@
         "51": ["durchwahl", "internenummer", "intern"],
         "52": ["email", "emil", "emailadresse"],
         "53": ["impp", "instantmessagingprotocol", "instantmessagingprotocolendpoint"]
+    },
+    "byFormType_EN": {
+        "login": ["login", "signin"],
+        "signup": ["create", "signup", "register", "registration", "new", "newaccount"]
+    },
+    "byFormType_DE": {
+        "login": ["login", "anmelden", "einloggen"],
+        "signup": ["erstellen", "neuanmelden", "neu", "registrieren", "registrierung"]
     }
 }

@@ -1,19 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <title>FormfieldCheck Settings</title>
+    <link rel="stylesheet" href="settings-style.css">
+    <script src="settings.js"></script>
 </head>
 
 <body>
-    <label>
-        <input type="checkbox" id="devModeChk" />
-        DevMode for DB access.
-    </label>
+    
+    <div id="wrap">
+        <h1>FormfieldCheck-Settings</h1>
 
-    <button id="saveBtn">Save</button>
+        <p class="hint">Some changes may require a reload of the active page.</p>
 
-    <script src="settings.js"></script>
+        <table>
+
+            <tr>
+                <td>
+                    <label for="showHiddenChk">Label hidden formfields.</label>
+                </td>
+                <td>
+                    <input type="checkbox" id="showHiddenChk" >
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <label for="highlightHoverChk">Highlight corresponding element on badge hover.</label>
+                </td>
+                <td>
+                    <input type="checkbox" id="highlightHoverChk" >
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <label for="onlyTestFormsChk">Only test elements, that are inside a form.</label>
+                </td>
+                <td>
+                    <input type="checkbox" id="onlyTestFormsChk" >
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <label for="devModeChk">DevMode for DB access.</label>
+                </td>
+                <td>
+                    <input type="checkbox" id="devModeChk" >
+                </td>
+            </tr>
+
+            
+
+
+        </table>
+
+        <br>
+
+        <button id="saveBtn">Save</button>
+
+
+    </div>
+
 </body>
+
 
 </html>

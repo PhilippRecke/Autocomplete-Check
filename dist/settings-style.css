@@ -1,0 +1,29 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#wrap {
+    margin: 0 auto;
+    max-width: 600px;
+    padding: 12px;
+}
+
+#saveBtn {
+    border-width: 1px;
+    border-radius: 2px;
+    padding: 8px;
+    background: none;
+    box-shadow: none;
+}
+
+#saveBtn:hover {
+    background: rgb(235, 235, 235);
+}
+
+#saveBtn:active {
+    background: rgb(209, 209, 209);
+}
+
+.hint {
+    font-style: italic;
+}

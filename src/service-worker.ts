@@ -1,15 +1,15 @@
-import axios from "axios";
 import { matchingItemWithId } from "./content-script";
 import { analyzeField, matchingItem } from "./matching/matching";
 
 chrome.runtime.onInstalled.addListener(async () => {
-    //sets tetx as a badge on the toolbar icon of the extension
+    // sets tetx as a badge on the toolbar icon of the extension
     chrome.action.setBadgeText({
         text: "OFF",
     });
 
+    // set initial values upon install
     await chrome.storage.local.set({ "acc.highlight": false });
-
+    await chrome.storage.local.set({ "acc.showHidden": true });
     await chrome.storage.local.set({ "acc.devMode": false });
 });
 

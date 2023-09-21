@@ -1,5 +1,16 @@
 {
-    "matchByLabel": 1,
-    "matchByFieldType": 0.3,
-    "matchByInputType": 0.3
+    "matchBy": {
+        "Label": 5,
+        "Placeholder": 4,
+        "FieldType": 1,
+        "InputType": 1,
+        "FormType": 2
+    },
+
+    "labelSubstringSearch": {
+        "full": 1,
+        "partial": 0.8,
+        "none": 0
+    }
+    
 }

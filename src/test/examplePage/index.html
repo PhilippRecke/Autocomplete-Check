@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <title>FormfieldCheck Test-Website</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -10,9 +9,9 @@
     <div id="wrap">
         <h1>This is a test-website</h1>
 
-        <form id="myform">
+        <form>
             <label for="fname">First name:</label>
-            <input type="text" id="fname" name="fname" autocomplete="given-name" placeholder="John">
+            <input type="text" id="fname" name="fname" autocomplete="tel" placeholder="John">
             <br>
             <label for="lname">Last name:</label>
             <input type="text" id="lname" name="lname" placeholder="Doe">
@@ -42,14 +41,6 @@
 
         </form>
 
-
-        <br>
-        <label for="asdf">This is outside a form:</label>
-        <input type="text" id="asdf" name="asdf" placeholder="not belonging to a form">
-        <br>
-        <label for="asdf2">This is outside a form:</label>
-        <input type="text" form="myform" id="asdf2" name="asdf2" placeholder="but belonging to a form">
-        <br>
         
 
 

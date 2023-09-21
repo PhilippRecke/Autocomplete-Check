@@ -1,38 +1,66 @@
 .acc-badge {
-    margin: 0px 8px;
-    border-radius: 8px;
-    box-shadow: 0px 0px 8px rgba(0, 0, 0, .2);
+    margin: 0px 8px !important;
+    border-radius: 8px !important;
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, .2) !important;
     display: inline-flex;
 }
 
 .acc-correct {
-    text-shadow: 0 0 0 green;
-    background-color: green;
+    text-shadow: 0 0 0 green !important;
+    background-color: green !important;
 }
 
 .acc-false {
-    text-shadow: 0 0 0 red;
-    background-color: red;
+    text-shadow: 0 0 0 red !important;
+    background-color: red !important;
+}
+
+.acc-info {
+    text-shadow: 0 0 0 rgb(224, 159, 19) !important;
+    background-color: rgb(224, 159, 19) !important;
 }
 
 .acc-icon {
-    padding: 4px;
-    margin: 0px;
-    height: auto;
-    /* tint emojis (❌✔) */
-    color: transparent; 
-    font-size: 10px;
-    background-color: white;
-    border-radius: 8px 0px 0px 8px;
+    padding: 4px !important;
+    margin: 0px !important;
+    height: auto !important;
+    /* tint emojis (❌✔❕) */
+    color: transparent !important; 
+    font-size: 10px !important;
+    line-height: normal !important;
+    background-color: white !important;
+    border-radius: 8px 0px 0px 8px !important;
     display: flex;
 }
 
 .acc-text {
-    padding: 4px;
-    margin: 0px;
-    height: auto;
-    color: white;
-    font-size: 10px;
-    border-radius: 0px 8px 8px 0px;
+    padding: 4px !important; 
+    margin: 0px !important;
+    height: auto !important;
+    color: white !important;
+    font-size: 10px !important;
+    line-height: normal !important;
+    border-radius: 0px 8px 8px 0px !important;
     display: flex;
+}
+
+.acc-classificationLabel {
+    color: rgb(69, 69, 69) !important;
+}
+
+.acc-tmp-hover {
+    box-shadow: 0px 0px 12px rgba(225, 255, 0, 0.572) !important;
+}
+
+#acc-floating-info {
+    display: none;
+    position: absolute;
+    z-index: 9999 !important;
+    background: white !important;
+    color: black !important;
+    font-size: 10px !important; 
+    line-height: normal !important;
+    height: 200px;
+    overflow-y: scroll !important;
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, .2) !important;
 }

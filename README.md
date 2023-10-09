@@ -1,7 +1,9 @@
 # Autocomplete-Check
 This is a browser-plugin for testing Websites against WCAG 2.1 Success Criterion 1.3.5: Identify Input Purpose.
 
-
+## How to use
+1. pin the plugin to your browser-toolbar
+2. click the plugin-icon to enable the extension
 
 ## Build and Run
 1. run `npm run build`

@@ -19,7 +19,7 @@
             <br>
 
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" placeholder="john.doe@example.com">
+            <input type="email" id="email" name="email" autocomplete="tel" placeholder="john.doe@example.com">
             <br>
             <label for="email_confirm">Confirm email:</label>
             <input type="email" id="email_confirm" name="email_confirm">
@@ -30,8 +30,8 @@
             <br>
 
             <br>
-            <label for="countries">Country:</label>
-            <select name="countries" id="countries">
+            <label id="countryLabel" for="countries">Country:</label>
+            <select name="countries" id="countries" aria-describedby="countryLabel">
                 <option value="de">Germany</option>
                 <option value="at">Austria</option>
                 <option value="ch">Switzerland</option>
@@ -39,9 +39,11 @@
             <br>
 
             <input type="radio" name="radio" value="m" autocomplete="name" checked="checked">
+            <input type="checkbox" name="checkbox" value="test" checked="checked">
 
         </form>
 
+        <h2>Edge-Cases</h2>
 
         <br>
         <label for="asdf">This is outside a form:</label>
@@ -50,8 +52,22 @@
         <label for="asdf2">This is outside a form:</label>
         <input type="text" form="myform" id="asdf2" name="asdf2" placeholder="but belonging to a form">
         <br>
-        
+        <input type="email" id="email" name="email" autocomplete="email hello" placeholder="john.doe@example.com">
+        <br>
+        <input type="text" form="myform" id="asdf3" name="asdf3" placeholder="This field has no label">
+        <br>
+        <label for="hidden">Hidden field:</label>
+        <input type="hidden" id="hidden" name="hidden">
+        <br>
+        <label for="disabled">Disabled field:</label>
+        <input type="text" id="disabled" name="disabled" disabled>
+        <br>
+        <label for="textArea">Textarea:</label>
+        <br>
+        <textarea rows="4" id="textArea" name="textArea"></textarea>
 
+        <br>
+        <input type="text" id="nopredictionbutac" autocomplete="email">
 
     </div>
 

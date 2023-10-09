@@ -2,65 +2,178 @@
 <html lang="en">
 
 <head>
-    <title>FormfieldCheck Settings</title>
+    <title>Autocomplete-Check Settings</title>
     <link rel="stylesheet" href="settings-style.css">
     <script src="settings.js"></script>
 </head>
 
 <body>
-    
+
     <div id="wrap">
-        <h1>FormfieldCheck-Settings</h1>
+        <form id="settingsForm">
+            <h1>Autocomplete-Check-Settings</h1>
 
-        <p class="hint">Some changes may require a reload of the active page.</p>
+            <p class="hint">Some changes may require a reload of the active page.</p>
 
-        <table>
+            <h2>Appearance</h2>
+            <hr>
 
-            <tr>
-                <td>
-                    <label for="showHiddenChk">Label hidden formfields.</label>
-                </td>
-                <td>
-                    <input type="checkbox" id="showHiddenChk" >
-                </td>
-            </tr>
+            <table>
+                <tr>
+                    <td>
+                        <label for="showHiddenChk">Label hidden formfields</label>
+                        <p class="description">Hidden form fields will be marked seperately.</p>
+                    </td>
+                    <td class="val">
+                        <input type="checkbox" name="showHiddenChk" id="showHiddenChk">
+                    </td>
+                </tr>
 
-            <tr>
-                <td>
-                    <label for="highlightHoverChk">Highlight corresponding element on badge hover.</label>
-                </td>
-                <td>
-                    <input type="checkbox" id="highlightHoverChk" >
-                </td>
-            </tr>
+                <tr>
+                    <td>
+                        <label for="showHiddenChk">Label disabled formfields</label>
+                        <p class="description">Disabled form fields will be marked seperately.</p>
+                    </td>
+                    <td class="val">
+                        <input type="checkbox" name="showDisabledChk" id="showDisabledChk">
+                    </td>
+                </tr>
 
-            <tr>
-                <td>
-                    <label for="onlyTestFormsChk">Only test elements, that are inside a form.</label>
-                </td>
-                <td>
-                    <input type="checkbox" id="onlyTestFormsChk" >
-                </td>
-            </tr>
+                <tr>
+                    <td>
+                        <label for="highlightHoverChk">Highlight element on hover</label>
+                        <p class="description">Highlight the element that corresponds to the hovered badge.</p>
+                    </td>
+                    <td class="val">
+                        <input type="checkbox" name="highlightHoverChk" id="highlightHoverChk">
+                    </td>
+                </tr>
 
-            <tr>
-                <td>
-                    <label for="devModeChk">DevMode for DB access.</label>
-                </td>
-                <td>
-                    <input type="checkbox" id="devModeChk" >
-                </td>
-            </tr>
+                <tr>
+                    <td>
+                        <label for="hoverColor">Hover color</label>
+                        <p class="description">The color of the highlight effect, that will be applied on hover.</p>
+                    </td>
+                    <td class="val">
+                        <input type="color" name="hoverColor" id="hoverColor">
+                    </td>
+                </tr>
 
-            
+                <tr>
+                    <td>
+                        <label for="fontSize">Font size</label>
+                        <p class="description">The font size that will be used in the badges. Also affects the size of the badges.</p>
+                    </td>
+                    <td class="val">
+                        <select name="fontSize" id="fontSize">
+                            <option value="x-small">x-small</option>
+                            <option value="small">small</option>
+                            <option value="medium">medium</option>
+                            <option value="large">large</option>
+                            <option value="x-large">x-large</option>
+                            <option value="xx-large">xx-large</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+
+            <h2>Behaviour</h2>
+            <hr>
+
+            <table>
+                <tr>
+                    <td>
+                        <label for="onlyTestFormsChk">Only test forms</label>
+                        <p class="description">Only elements inside a form or belonging to one, will be analyzed.</p>
+                    </td>
+                    <td class="val">
+                        <input type="checkbox" name="onlyTestFormsChk" id="onlyTestFormsChk">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <label for="floatBadgeChk">Floating badges</label>
+                        <p class="description">Make the badges float directly under the corresponding element. This may
+                            obstruct the view of underlying content! (Warning: experimental)</p>
+                    </td>
+                    <td class="val">
+                        <input type="checkbox" name="floatBadgeChk" id="floatBadgeChk">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <label for="classThreshold">Classification threshold</label>
+                        <p class="description">Minimum confidence threshold, for a classification. Float value between 0 and 1. Confidence in %. Default 0.5.</p>
+                    </td>
+                    <td class="val">
+                        <input type="number" name="classThreshold" id="classThreshold" min="0" max="1" step="0.01">
+                    </td>
+                </tr>
+            </table>
+
+            <h2>Developer-Settings</h2>
+            <hr>
+
+            <table>
+                <tr>
+                    <td>
+                        <label for="devModeChk">Enable database mode</label>
+                        <p class="description">Add the option to manually label form fields and save them to a database.
+                        </p>
+                    </td>
+                    <td class="val">
+                        <input type="checkbox" name="devModeChk" id="devModeChk">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <label for="dbUrlTxt">Database Url</label>
+                        <p class="description">Url (and port) of the couchDB server.</p>
+                    </td>
+                    <td class="val">
+                        <!--type url not working with format 192.168.1.20:5984 -->
+                        <input type="text" placeholder="https://192.168.1.20:5984" name="dbUrlTxt" id="dbUrlTxt">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <label for="dbUsrTxt">Database User</label>
+                    </td>
+                    <td class="val">
+                        <input type="text" placeholder="admin" name="dbUsrTxt" id="dbUsrTxt">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <label for="dbPwdTxt">Database Password</label>
+                    </td>
+                    <td class="val">
+                        <input type="password" placeholder="*****" name="dbPwdTxt" id="dbPwdTxt">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <label for="dbTestBtn">Test database settings</label>
+                        <p class="description">The database name must be "autocompletecheck-db".</p>
+                    </td>
+                    <td class="val">
+                        <input type="button" id="dbTestBtn" name="dbTestBtn" value="Test connection">
+                    </td>
+                </tr>
+            </table>
 
 
-        </table>
+            <br>
 
-        <br>
+            <button id="saveBtn" type="submit">Save</button>
 
-        <button id="saveBtn">Save</button>
-
+        </form>
 
     </div>
 

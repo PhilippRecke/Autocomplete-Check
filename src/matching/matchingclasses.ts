@@ -2,31 +2,33 @@ import { matchingItem, getIdOfAcName } from "./matching";
 import autocompleteDict from "./autocomplete-dict.json";
 import matchingClassesInfluence from "./matchingClassesInfluence.json"
 
-export type matchByTopResult = {id: string, confidence: number}
+export type matchByTopResult = {
+    id: string,
+    confidence: number}
 
 
 // search for string occurences in db
 export const matchByLabel = (item: matchingItem) => {
     const topResults: matchByTopResult[] = [];
 
-    if (item.labelText === undefined) {
+    if (item.label === null) {
         return topResults;
     }
 
     const labelExamplesEN = autocompleteDict.byLabel_EN as Record<string, string[]>;
     for (const id of Object.keys(labelExamplesEN)) {
-        const substringSearchResult = substringSearch(labelExamplesEN[id], item.labelText);
+        const substringSearchResult = substringSearch(labelExamplesEN[id], item.label);
 
-        if (["full", "partial"].includes(substringSearchResult)) {
+        if (["full", "partial", "reverse-partial"].includes(substringSearchResult)) {
             topResults.push({id: id, confidence: 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]});
         }
     }
 
     const labelExamplesDE = autocompleteDict.byLabel_DE as Record<string, string[]>;
     for (const id of Object.keys(labelExamplesDE)) {
-        const substringSearchResult = substringSearch(labelExamplesDE[id], item.labelText);
+        const substringSearchResult = substringSearch(labelExamplesDE[id], item.label);
 
-        if (["full", "partial"].includes(substringSearchResult)) {
+        if (["full", "partial", "reverse-partial"].includes(substringSearchResult)) {
             
             const foundIndex = topResults.findIndex(i => i.id == id);
             // check if entry alrady exists in results. if so update only confidence score
@@ -36,6 +38,13 @@ export const matchByLabel = (item: matchingItem) => {
 
             if (foundIndex === -1) {
                 topResults.push({id: id, confidence: 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]});
+
+            // if en is a direct hit, dont override
+            } else if (topResults[foundIndex].confidence === matchingClassesInfluence.labelSubstringSearch["full"]) {
+                // do nothing
+            // if there is a direct hit, override en search result
+            } else if (substringSearchResult === "full") {
+                topResults[foundIndex].confidence = matchingClassesInfluence.labelSubstringSearch[substringSearchResult];
             } else {
                 topResults[foundIndex].confidence = (topResults[foundIndex].confidence + 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]) / 2;
             }
@@ -43,7 +52,7 @@ export const matchByLabel = (item: matchingItem) => {
             
         }
     }
-    
+
 
     return weighConfidences(topResults);
 }
@@ -52,16 +61,16 @@ export const matchByLabel = (item: matchingItem) => {
 export const matchByPlaceholder = (item: matchingItem) => {
     const topResults: matchByTopResult[] = [];
 
-    if (item.inputPlaceholder === undefined) {
+    if (item.placeholder === null) {
         return topResults;
     }
 
     //TODO add placeholder-keywords_EN
     const labelExamplesEN = autocompleteDict.byLabel_EN as Record<string, string[]>;
     for (const id of Object.keys(labelExamplesEN)) {
-        const substringSearchResult = substringSearch(labelExamplesEN[id], item.inputPlaceholder);
+        const substringSearchResult = substringSearch(labelExamplesEN[id], item.placeholder);
 
-        if (["full", "partial"].includes(substringSearchResult)) {
+        if (["full", "partial", "reverse-partial"].includes(substringSearchResult)) {
             topResults.push({id: id, confidence: 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]});
         }
     }
@@ -69,9 +78,9 @@ export const matchByPlaceholder = (item: matchingItem) => {
     //TODO add placeholder-keywords_DE
     const labelExamplesDE = autocompleteDict.byLabel_DE as Record<string, string[]>;
     for (const id of Object.keys(labelExamplesDE)) {
-        const substringSearchResult = substringSearch(labelExamplesDE[id], item.inputPlaceholder)
+        const substringSearchResult = substringSearch(labelExamplesDE[id], item.placeholder)
 
-        if (["full", "partial"].includes(substringSearchResult)) {
+        if (["full", "partial", "reverse-partial"].includes(substringSearchResult)) {
             
             const foundIndex = topResults.findIndex(i => i.id == id);
 
@@ -93,7 +102,7 @@ export const matchByPlaceholder = (item: matchingItem) => {
 export const matchByFieldType = (item: matchingItem) => {
     const topResults: matchByTopResult[] = [];
 
-    if (item.fieldType === undefined) {
+    if (item.fieldType === null) {
         return topResults;
     }
 
@@ -122,9 +131,11 @@ export const matchByFieldType = (item: matchingItem) => {
 export const matchByInputType = (item: matchingItem) => {
     const topResults: matchByTopResult[] = [];
 
-    if (item.fieldType !== "input" || item.inputType === undefined) {
+    if (item.fieldType !== "input" || item.inputType === null) {
         return topResults;
     }
+
+    //TODO handle exclusive test differently, when item is no input-element
 
     const possibleInputTypes = autocompleteDict.byInputType;
 
@@ -153,7 +164,7 @@ export const matchByFormType = (item: matchingItem) => {
     if (item.formId === undefined) {
         return topResults;
     }
-    if (item.formHeadings === undefined || item.formHeadings.length === 0) {
+    if (item.formHeadings === null || item.formHeadings.length === 0) {
         return topResults;
     }
 
@@ -161,11 +172,13 @@ export const matchByFormType = (item: matchingItem) => {
         "login": {
             "full": 0,
             "partial": 0,
+            "reverse-partial": 0,
             "none": 0
         },
         "signup": {
             "full": 0,
             "partial": 0,
+            "reverse-partial": 0,
             "none": 0
         },
     };
@@ -215,6 +228,96 @@ export const matchByFormType = (item: matchingItem) => {
     return weighConfidences(topResults);
 }
 
+// uses same values from labels, but has lower confidence in weighting
+export const matchByName = (item: matchingItem) => {
+    const topResults: matchByTopResult[] = [];
+
+    if (item.name === null) {
+        return topResults;
+    }
+
+    const labelExamplesEN = autocompleteDict.byLabel_EN as Record<string, string[]>;
+    for (const id of Object.keys(labelExamplesEN)) {
+        const substringSearchResult = substringSearch(labelExamplesEN[id], item.name);
+
+        if (["full", "partial", "reverse-partial"].includes(substringSearchResult)) {
+            topResults.push({id: id, confidence: 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]});
+        }
+    }
+
+    const labelExamplesDE = autocompleteDict.byLabel_DE as Record<string, string[]>;
+    for (const id of Object.keys(labelExamplesDE)) {
+        const substringSearchResult = substringSearch(labelExamplesDE[id], item.name);
+
+        if (["full", "partial", "reverse-partial"].includes(substringSearchResult)) {
+            
+            const foundIndex = topResults.findIndex(i => i.id == id);
+            // check if entry alrady exists in results. if so update only confidence score
+
+            if (foundIndex === -1) {
+                topResults.push({id: id, confidence: 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]});
+
+            // if en is a direct hit, dont override
+            } else if (topResults[foundIndex].confidence === matchingClassesInfluence.labelSubstringSearch["full"]) {
+                // do nothing
+            // if there is a direct hit, override en search result
+            } else if (substringSearchResult === "full") {
+                topResults[foundIndex].confidence = matchingClassesInfluence.labelSubstringSearch[substringSearchResult];
+            } else {
+                topResults[foundIndex].confidence = (topResults[foundIndex].confidence + 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]) / 2;
+            }
+        }
+    }
+
+
+    return weighConfidences(topResults);
+}
+
+// uses same values from labels, but has lower confidence in weighting
+export const matchById = (item: matchingItem) => {
+    const topResults: matchByTopResult[] = [];
+
+    if (item.id === null) {
+        return topResults;
+    }
+
+    const labelExamplesEN = autocompleteDict.byLabel_EN as Record<string, string[]>;
+    for (const id of Object.keys(labelExamplesEN)) {
+        const substringSearchResult = substringSearch(labelExamplesEN[id], item.id);
+
+        if (["full", "partial", "reverse-partial"].includes(substringSearchResult)) {
+            topResults.push({id: id, confidence: 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]});
+        }
+    }
+
+    const labelExamplesDE = autocompleteDict.byLabel_DE as Record<string, string[]>;
+    for (const id of Object.keys(labelExamplesDE)) {
+        const substringSearchResult = substringSearch(labelExamplesDE[id], item.id);
+
+        if (["full", "partial", "reverse-partial"].includes(substringSearchResult)) {
+            
+            const foundIndex = topResults.findIndex(i => i.id == id);
+            // check if entry alrady exists in results. if so update only confidence score
+
+            if (foundIndex === -1) {
+                topResults.push({id: id, confidence: 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]});
+
+            // if en is a direct hit, dont override
+            } else if (topResults[foundIndex].confidence === matchingClassesInfluence.labelSubstringSearch["full"]) {
+                // do nothing
+            // if there is a direct hit, override en search result
+            } else if (substringSearchResult === "full") {
+                topResults[foundIndex].confidence = matchingClassesInfluence.labelSubstringSearch[substringSearchResult];
+            } else {
+                topResults[foundIndex].confidence = (topResults[foundIndex].confidence + 1 * matchingClassesInfluence.labelSubstringSearch[substringSearchResult]) / 2;
+            }
+        }
+    }
+
+
+    return weighConfidences(topResults);
+}
+
 
 //weighs the confidence, based on the length of results and average confidence
 const weighConfidences = (data: matchByTopResult[]) => {
@@ -223,14 +326,14 @@ const weighConfidences = (data: matchByTopResult[]) => {
 
     //recalculate weights per item
     const newWeights = data.map(item => ({ id: item.id, confidence: item.confidence * averageWeigth }));
-    //console.log(newWeights);
+
     
     return data;
     //return newWeights;
 }
 
 
-const substringSearch = (labelExamples: string[], labelText: string) => {
+export const substringSearch = (labelExamples: string[], labelText: string) => {
     // search for full occurences
     if (labelExamples.map(label => sanitizeKeyword(label)).includes(sanitizeKeyword(labelText))) {
         return "full";
@@ -239,12 +342,44 @@ const substringSearch = (labelExamples: string[], labelText: string) => {
     // split by n-whitespaces, filter out empty strings
     const labelWords = labelText.split(/\s+/).filter(Boolean);
 
+    let partialHit = false;
+    let reversePartialHit = false;
+
     // search for partial occurences (substrings in both label and examples)
     for (const word of labelWords) {
-        // if any word is a substring in any label array, return true
-        if (labelExamples.some(label => sanitizeKeyword(label).indexOf(sanitizeKeyword(word)) !== -1)) {
-            return "partial";
+        
+        // do not search for empty strings
+        const sanitizedWord = sanitizeKeyword(word);
+        if (sanitizedWord === "") {
+            continue;
         }
+
+        // only perform partiual searches on words, taht are at least 3 characters long, to avoid arbitrary matches
+        if (sanitizedWord.length < 3) {
+            continue;
+        }
+
+        // if any word is a substring in any label array, return partial
+        // example: dict="telephone", word="phone"
+        if (labelExamples.some(label => sanitizeKeyword(label).indexOf(sanitizedWord) !== -1)) {
+            partialHit = true;
+        }
+        
+        // if any dict entry is substring of label word, return partial
+        // example: dict="phone", word="telephone"
+        if (labelExamples.some(label => sanitizedWord.indexOf(sanitizeKeyword(label)) !== -1)) {
+            reversePartialHit = true;
+            
+        }
+    }
+
+    // partial is higher valued, than reversehit
+    if (partialHit) {
+        return "partial";
+    }
+
+    if (reversePartialHit) {
+        return "reverse-partial";
     }
 
     return "none";

@@ -4,13 +4,28 @@
         "Placeholder": 4,
         "FieldType": 1,
         "InputType": 1,
-        "FormType": 2
+        "FormType": 1,
+        "Name": 2,
+        "Id": 2
+    },
+
+    "testType": {
+        "Label": "inclusive",
+        "Placeholder": "exclusive",
+        "FieldType": "inclusive",
+        "InputType": "inclusive",
+        "FormType": "exclusive",
+        "Name": "exclusive",
+        "Id": "exclusive"
     },
 
     "labelSubstringSearch": {
         "full": 1,
         "partial": 0.8,
+        "reverse-partial": 0.55,
         "none": 0
-    }
+    },
+
+    "lengthPenaltyMultiplier": 1
     
 }

@@ -1,38 +1,84 @@
 import { matchingItemWithId } from "./content-script";
+import { dbSiteItem, dbSiteItemNoForms } from "./db/dbtypes";
 import { analyzeField, matchingItem } from "./matching/matching";
 
 chrome.runtime.onInstalled.addListener(async () => {
+    /*
     // sets tetx as a badge on the toolbar icon of the extension
     chrome.action.setBadgeText({
         text: "OFF",
+    });
+    */
+
+    // Set the action badge to the default state (off)
+    await chrome.action.setIcon({
+        path: "icon32-d.png"
     });
 
     // set initial values upon install
     await chrome.storage.local.set({ "acc.highlight": false });
     await chrome.storage.local.set({ "acc.showHidden": true });
+    await chrome.storage.local.set({ "acc.showDisabled": true });
+    await chrome.storage.local.set({ "acc.hoverColor": "#303030" });
+    await chrome.storage.local.set({ "acc.fontSize": "small" });
+    await chrome.storage.local.set({ "acc.onlyTestForms": false });
+    await chrome.storage.local.set({ "acc.floatBadge": false });
+    await chrome.storage.local.set({ "acc.classThreshold": "0.5" });
     await chrome.storage.local.set({ "acc.devMode": false });
+    await chrome.storage.local.set({ "acc.dbUrlTxt": "" });
+    await chrome.storage.local.set({ "acc.dbUsrTxt": "" });
+    await chrome.storage.local.set({ "acc.dbPwdTxt": "" });
 });
 
-const updateBadgeText = async () => {
+const updateBadgeText = async (sendResponse: (response: any) => void) => {
     const currentHighlightStateObj = await chrome.storage.local.get(["acc.highlight"]);
     const currentHighlightState = currentHighlightStateObj["acc.highlight"] as boolean;
-
+    
     chrome.action.setBadgeText({
         text: currentHighlightState ? "ON" : "OFF",
     });
+
+    sendResponse({status: true});
+}
+
+const updateBadgeState = async (tab: chrome.tabs.Tab) => {
+
+    const currentHighlightStateObj = await chrome.storage.local.get(["acc.highlight"]);
+    const currentHighlightState = currentHighlightStateObj["acc.highlight"] as boolean;
+
+    
+    await chrome.storage.local.set({ "acc.highlight": !currentHighlightState });
+
+
+    /*
+    chrome.action.setBadgeText({
+        text: currentHighlightState ? "ON" : "OFF",
+    });
+    */
+
+    // Set the action badge to the next state
+    await chrome.action.setIcon({
+        path: !currentHighlightState ? "icon32-g.png" : "icon32-d.png"
+    });
+
+    if (tab.id === undefined) return;
+    console.log(`tab-id: ${tab.id}`);
+    
+    const response = await chrome.tabs.sendMessage(tab.id, { msg: "acc.toggleHighlightContent" });
+    //TODO Error when receiving end does not exist (anymore)
 
     return true;
 }
 
 // handle incoming messages
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     switch (request.msg) {
         case "acc.updateBadgeText":
-            sendResponse({ status: updateBadgeText() });
+            updateBadgeText(sendResponse);
             break;
 
         case "acc.addFormToDB":
-            sendResponse({ status: sendToDB(request.url, request.data) });
+            sendToDB(request.data, sendResponse);
             break;
 
         case "acc.classifyField":
@@ -54,33 +100,40 @@ const classifyField = (data: matchingItem) => {
 }
 
 
-const sendToDB = async (url: string, itemList: matchingItemWithId[]) => {
+const sendToDB = async (itemList: dbSiteItemNoForms | dbSiteItem, sendResponse: (response: any) => void) => {
 
-    //axios.post("https://admin:password@192.168.178.100:5987/formfieldcheck-db/", {"url": url, "inputs": itemList});
+    const dbUrlTxtObj = await chrome.storage.local.get("acc.dbUrlTxt");
+    const dbUrl = dbUrlTxtObj["acc.dbUrlTxt"] as string;
 
-    //const res = await fetch(url, { method: "POST", credentials: "include", headers: { Cookie: token }, });
+    const dbUsrTxtObj = await chrome.storage.local.get("acc.dbUsrTxt");
+    const dbUsr = dbUsrTxtObj["acc.dbUsrTxt"] as string;
 
-    console.log("begin ");
-    
-    
-    const res = await fetch("http://192.168.178.100:5987/formfieldcheck-db/",
+    const dbPwdTxtObj = await chrome.storage.local.get("acc.dbPwdTxt");
+    const dbPwd = dbPwdTxtObj["acc.dbPwdTxt"] as string;
+
+    const res = await fetch(`${dbUrl}/autocompletecheck-db/`,
         {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Basic " + btoa("admin:password"),
+                "Authorization": "Basic " + btoa(`${dbUsr}:${dbPwd}`),
             },
-            body: JSON.stringify({ "url": url, "inputs": itemList })
+            body: JSON.stringify(itemList)
         }
     );
-
+    
     console.log(res.statusText);
     console.log(res);
-    
 
-    return true;
+    sendResponse({status: res.statusText});
 }
 
+
+chrome.action.onClicked.addListener(async (tab) => {
+    
+    updateBadgeState(tab);
+
+});
 
 
 /*

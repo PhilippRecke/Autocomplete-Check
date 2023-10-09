@@ -26,4 +26,29 @@ body {
 
 .hint {
     font-style: italic;
+    font-size: medium;
+}
+
+label {
+    font-size: medium;
+}
+
+.description {
+    color: rgb(100, 100, 100);
+    font-size: small;
+    margin: 4px 0px;
+}
+
+table {
+    width: 100%;
+}
+
+td.val {
+    width: 5%;
+    text-align: right;
+}
+
+h2 {
+    margin-bottom: 4px;
+    color: rgb(86, 86, 86);
 }

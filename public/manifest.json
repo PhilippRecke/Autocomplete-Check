@@ -1,11 +1,14 @@
 {
-    "name": "FormFieldCheck",
+    "name": "Autocomplete-Check",
     "description": "Easily check autocomplete values on input-elements",
-    "version": "0.2",
+    "version": "1.0",
     "manifest_version": 3,
+    "author": "Philipp Recke",  
+    "homepage_url": "https://github.com/PhilippRecke/Autocomplete-Check",
+
     "action": {
-        "default_popup": "popup.html",
-        "default_title": "Open PopUp"
+        "default_icon": "icon32-d.png",
+        "default_title": "Activate Autocomplete-Check"
     },
     "background": {
         "service_worker": "service-worker.js"
@@ -22,5 +25,11 @@
         "activeTab",
         "scripting",
         "storage"
-    ]
+    ],
+    "icons": {
+        "16": "icon16-g.png",
+        "32": "icon32-g.png",
+        "64": "icon64-g.png",
+        "128": "icon128-g.png"
+    }
 }

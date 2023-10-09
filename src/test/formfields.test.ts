@@ -34,6 +34,6 @@ const testElementWithId = async (id: string) => {
         throw new Error(`Element with id "${id}" was not found in document.`);
     }
 
-    const matchingItem = generateMatchingItem(element, myDocument);
+    const matchingItem = generateMatchingItem(element, myDocument, -1);
     return analyzeField(matchingItem);
 }

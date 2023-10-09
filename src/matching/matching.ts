@@ -1,10 +1,14 @@
+import { dbFieldItem } from '../db/dbtypes';
 import autocompleteDict from './autocomplete-dict.json';
-import { matchByFieldType, matchByFormType, matchByInputType, matchByLabel, matchByPlaceholder, matchByTopResult } from './matchingclasses';
-import matchingClassesInfluence from "./matchingClassesInfluence.json"
+import { matchByFieldType, matchByFormType, matchById, matchByInputType, matchByLabel, matchByName, matchByPlaceholder, matchByTopResult } from './matchingclasses';
+import classesInfluence from "./matchingClassesInfluence.json"
 
 type inputType = "button" | "checkbox" | "color" | "date" | "datetime-local" | "email" | "file" | "hidden" | "image" | "month" | "number" | "password" | "radio" | "range" | "reset" | "search" | "submit" | "tel" | "text" | "time" | "url" | "week";
 
-export type matchingItem = {
+export type matchingItem = dbFieldItem;
+/*
+{
+    fieldId?: string;
     formId?: string;
     formHeadings?: string[];
     labelText?: string;
@@ -15,6 +19,7 @@ export type matchingItem = {
     inputPattern?: string
     inputRequired?: boolean;
 }
+*/
 
 type valueGuess = {
     value: string;
@@ -30,30 +35,50 @@ type matchResult = {
 }
 
 
-export const generateMatchingItem = (input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, document: Document, formId?: string) => {
-
-    const itemResult: matchingItem = {};
-
-    itemResult.formId = formId;
-    itemResult.formHeadings = getHeadingsOfForm(document, formId);
-
-    itemResult.inputType = input.type as inputType; //TODO error, when invalid type?
-    itemResult.inputName = input.name;
-    itemResult.fieldType = input.tagName.toLowerCase();
+export const generateMatchingItem = (input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, document: Document, posInFields: number, formId?: string, posInForm?: number) => {
 
     const labelList = [...document.getElementsByTagName('label')]
         .filter(label => label.htmlFor == input.id);
-    
-    console.log(labelList);
-    console.log(labelList[0]?.innerText);
 
-    itemResult.labelText = labelList[0]?.innerText;
-
-    if (!(input instanceof HTMLSelectElement)) {
-        itemResult.inputPlaceholder = input.placeholder == "" ? undefined : input.placeholder;
+    const selectCollection = input instanceof HTMLSelectElement ? input.options : null;
+    let selectList: string[] | null = null;
+    const selectListValues: string[] = [];
+    if (selectCollection !== null) {
+        for (const item of selectCollection) {
+            selectListValues.push(item.value);
+        }
+        selectList = selectListValues;
     }
 
-    itemResult.inputRequired = input.required;
+
+    const itemResult: matchingItem = {
+        id: input.id,
+
+        formId: formId? formId : null,
+        positionInForm: posInForm? posInForm : null,
+        formHeadings: getHeadingsOfForm(document, formId),
+        positionInFields: posInFields,
+        label: labelList[0]?.textContent?.trim() ?? null,
+        name: input.name,
+        value: input.value,
+        checked: input instanceof HTMLInputElement ? input.checked : null,
+        selectValues: selectList,
+        ariaLabel: input.getAttribute("aria-label"),
+        ariaDisabled: input.ariaDisabled as boolean | null,
+        ariaHidden: input.getAttribute("aria-hidden") as boolean | null,
+        inputType: input.type as inputType, //TODO error, when invalid type?
+        fieldType: input.tagName.toLowerCase(),
+        isInTable: input.getAttribute("disabled") as boolean | null,
+        autocomplete: input.getAttribute("autocomplete"),
+        correctAutocomplete: null,
+
+        placeholder: input.getAttribute("placeholder"),
+        maxLength: input.getAttribute("maxLength") === null ? null : Number(input.getAttribute("maxLength")),
+        disabled: input.getAttribute("disabled") as boolean | null,
+        required: input.required,
+        pattern: input.getAttribute("pattern")
+
+    };
 
     return itemResult;
 }
@@ -100,29 +125,55 @@ export const analyzeField = (data: matchingItem) => {
 
     const testResults = generateEmptyTestResults();
 
+    const logTestResults = false;
+
+    logTestResults && console.log(`Individual TestResults for item: ${data.name}`);
+    logTestResults && console.log(data);
+
+
     const labelResults = matchByLabel(data);
-    console.log(labelResults);
-    updateTestResults(testResults, labelResults, matchingClassesInfluence.matchBy.Label)
+    logTestResults && console.log(`byLabel: ${data.label}`);
+    logTestResults && console.log(labelResults);
+    updateTestResults(testResults, labelResults, classesInfluence.matchBy.Label, classesInfluence.testType.Label as testType);
     
     const placeholderResults = matchByPlaceholder(data);
-    console.log(placeholderResults);
-    updateTestResults(testResults, placeholderResults, matchingClassesInfluence.matchBy.Placeholder)
+    logTestResults && console.log(`byPlaceholder: ${data.placeholder}`);
+    logTestResults && console.log(placeholderResults);
+    updateTestResults(testResults, placeholderResults, classesInfluence.matchBy.Placeholder, classesInfluence.testType.Placeholder as testType);
 
     const fieldTypeResults = matchByFieldType(data);
-    console.log(fieldTypeResults);
-    updateTestResults(testResults, fieldTypeResults, matchingClassesInfluence.matchBy.FieldType)
+    logTestResults && console.log(`byFieldType: ${data.fieldType}`);
+    logTestResults && console.log(fieldTypeResults);
+    updateTestResults(testResults, fieldTypeResults, classesInfluence.matchBy.FieldType, classesInfluence.testType.FieldType as testType);
 
     const inputTypeResults =  matchByInputType(data);
-    console.log(inputTypeResults);
-    updateTestResults(testResults, inputTypeResults, matchingClassesInfluence.matchBy.InputType)
+    logTestResults && console.log(`byInputType: ${data.inputType}`);
+    logTestResults && console.log(inputTypeResults);
+    updateTestResults(testResults, inputTypeResults, classesInfluence.matchBy.InputType, classesInfluence.testType.InputType as testType);
 
     const formTypeResults =  matchByFormType(data);
-    console.log(formTypeResults);
-    updateTestResults(testResults, formTypeResults, matchingClassesInfluence.matchBy.FormType)
+    logTestResults && console.log(`byFormType: ${data.formId}`);
+    logTestResults && console.log(formTypeResults);
+    updateTestResults(testResults, formTypeResults, classesInfluence.matchBy.FormType, classesInfluence.testType.FormType as testType);
 
+    const inputNameResults =  matchByName(data);
+    logTestResults && console.log(`byName: ${data.name}`);
+    logTestResults && console.log(inputNameResults);
+    updateTestResults(testResults, inputNameResults, classesInfluence.matchBy.Name, classesInfluence.testType.Name as testType);
+
+    const inputIdResults =  matchById(data);
+    logTestResults && console.log(`byId: ${data.id}`);
+    logTestResults && console.log(inputIdResults);
+    updateTestResults(testResults, inputIdResults, classesInfluence.matchBy.Id, classesInfluence.testType.Id as testType);
     
 
+    logTestResults && console.log("--------collected test results unweighted:");
+    logTestResults && console.log(testResults);
+
     const matchingTableResult = weighTestResults(testResults);
+
+    logTestResults && console.log(matchingTableResult);
+
 
     /*
     const matchingTableResult = evaluateMatchingClassesResults({
@@ -135,7 +186,7 @@ export const analyzeField = (data: matchingItem) => {
     //console.log(`classifyresult: ${matchingTableResult}`);
 
     const sortedMatchingResults = matchingTableResult.sort((a, b) => b.confidenceScore - a.confidenceScore);
-    console.log(sortedMatchingResults);
+    // console.log(sortedMatchingResults);
 
     return sortedMatchingResults;
 }
@@ -205,20 +256,31 @@ const generateEmptyTestResults = () => {
 }
 
 
-const updateTestResults = (testResults: testResults, newResults: matchByTopResult[], testInfluence: number) => {
-    //TODO set 0 even in classes, that are not returned (test still failed)
+type testType = "inclusive" | "exclusive";
+// inclusive tests: no result shall be 0 in confidence
+// exclusive test: no result shall not influence confidence
+
+const updateTestResults = (testResults: testResults, newResults: matchByTopResult[], testInfluence: number, testType: testType) => {
+    
     // empty list, to be populated with negative test results (0 confidence score)
     const tmpResults: matchByTopResult[] = [...newResults];
 
-    for (const key of Object.keys(autocompleteDict.byId)) {
-        // if a class (key) is not in newResults, populate tmpResults with 0-entry
-        if (!newResults.find(r => r.id === key)) {
-            tmpResults.push({
-                id: key,
-                confidence: 0
-            });
+    if (testType === "inclusive") {
+        
+        //TODO evaluate for best results!!!
+        for (const key of Object.keys(autocompleteDict.byId)) {
+            // if a class (key) is not in newResults, populate tmpResults with 0-entry
+            if (!newResults.find(r => r.id === key)) {
+                tmpResults.push({
+                    id: key,
+                    confidence: 0
+                });
+            }
         }
+        
     }
+    
+    
 
     for (const newResult of tmpResults) {
         const foundIndex = testResults.findIndex(i => i.classId == newResult.id);
@@ -237,22 +299,42 @@ const updateTestResults = (testResults: testResults, newResults: matchByTopResul
     
 }
 
+
 // generated weighted average per class
 const weighTestResults = (testResults: testResults) => {
 
     // TODO ensure uniqueness!!!
     const table: matchingTable = [];
 
+    // calculate highest length of all results
+    const maxLength = testResults.reduce((maxn, item) => Math.max(maxn, item.resultsAndWeights.length), 0);
+
+
+    // average of classes, but weigh individual test based on influence
     for (const classResult of testResults) {
+
+        //calculate scaleFactor of individual classResult length
+        const scaleFactor = classResult.resultsAndWeights.length / maxLength;
+
         const weightedSum = classResult.resultsAndWeights.reduce((sum, item) => sum + (item.result * item.weight), 0)
         const summedInfluences = classResult.resultsAndWeights.reduce((sum, item) => sum + item.weight, 0)
         const weigtedResult = weightedSum / summedInfluences;
 
-        table.push({acValue: getNameOfAcId(classResult.classId), acId: classResult.classId, confidenceScore: weigtedResult })
+        // penalize fewer results
+        const lengthPenalty = (1 - weigtedResult) * ((1 - scaleFactor) / maxLength) * classesInfluence.lengthPenaltyMultiplier;
+
+        const penalizedResult = weigtedResult - lengthPenalty;
+
+        //table.push({acValue: getNameOfAcId(classResult.classId), acId: classResult.classId, confidenceScore: weigtedResult })
+        table.push({acValue: getNameOfAcId(classResult.classId), acId: classResult.classId, confidenceScore: penalizedResult })
+        
     } 
     
     return table;
 }
+
+
+
 
 const getHeadingsOfForm = (doc: Document, formId?: string) => {
     const headings: string[] = [];

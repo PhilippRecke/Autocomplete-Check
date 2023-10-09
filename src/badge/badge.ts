@@ -2,17 +2,17 @@ import { matchingItemWithId } from "../content-script";
 import { matchingTable, matchingItem, matchingTableEntry } from "../matching/matching";
 import autocompleteDict from '../matching/autocomplete-values.json';
 
-type acStatus = "✔" | "❌" | "❕";
+type acStatus = "✔ AC OK" | "✔ NO AC NEEDED" | "❕ AC WRONG" | "❕ AC FOUND" | "❕ NO AC FOUND" | "❌ AC WRONG";
 
 export const generateAutocompleteBadge = async (
     element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
     labeledResults: matchingTable,
     matchingItem: matchingItem,
     labeledMatchingItemList: matchingItemWithId[], // for db labeling
-    badgeId: number
+    badgeId: string
     ) => {
 
-    const autocompleteExists = element.hasAttribute("autocomplete");
+    const autocompleteFound = element.hasAttribute("autocomplete");
     let autocompleteVal = element.getAttribute("autocomplete");
     if (autocompleteVal === null) {
         autocompleteVal = "value missing";
@@ -22,66 +22,112 @@ export const generateAutocompleteBadge = async (
 
     const badgeContainer = document.createElement("div");
     badgeContainer.className = "acc-badge"
-    badgeContainer.addEventListener("click", (e) => {
-        console.log("badge clicked");
+    badgeContainer.id = badgeId;
 
-        //const boundingRect = (e.target as HTMLDivElement).getBoundingClientRect();
-        const boundingRect = badgeContainer.getBoundingClientRect();
+    // add element id as data attribute
+    if (element.id !== undefined && element.id !== "") {
+        badgeContainer.setAttribute("data-id-of-input", element.id)
+    }
 
-        showFloatingInfoTableAtPosition(boundingRect.left + window.scrollX, boundingRect.top + window.scrollY, labeledResults)
-    });
-    
+    // set font size from settings
+    const fontSizeObj = await chrome.storage.local.get("acc.fontSize");
+    const fontSize = fontSizeObj["acc.fontSize"] as string;
+    badgeContainer.style.fontSize = fontSize;
     
     // do highlighthover, if set in settings
+    const hoverColorObj = await chrome.storage.local.get("acc.hoverColor");
+    const hoverColor = hoverColorObj["acc.hoverColor"] as string;
     const highlightHoverObj = await chrome.storage.local.get("acc.highlightHover")
     if (highlightHoverObj["acc.highlightHover"] as boolean) {
         badgeContainer.addEventListener('mouseover',  () => {
-            element.classList.add("acc-tmp-hover")
+            badgeContainer.classList.add("acc-tmp-hover");
+            element.style.boxShadow = `0 0 12px ${hoverColor}80`; // 80 is 50% alpha, hoverColor is RGB
+            
         });
         badgeContainer.addEventListener('mouseout', () => {
-            element.classList.remove("acc-tmp-hover")
+            badgeContainer.classList.remove("acc-tmp-hover")
+            element.style.boxShadow = "";
         });
     }
 
-    const autocompleteStatus = getAcStatus(autocompleteExists, autocompleteIsValidValue, autocompleteVal, labeledResults[0])
+    const acThresholdObj = await chrome.storage.local.get("acc.classThreshold");
+    const acThresholdStr = acThresholdObj["acc.classThreshold"] as string;
+    const acThreshold = Number(acThresholdStr);
+
+    generatePredictionLabel(badgeContainer, labeledResults[0], autocompleteVal, acThreshold, autocompleteFound);
+
+    let warningFlag = false;
+
+    // add label warning
+    console.log(matchingItem.label);
+    if (matchingItem.label === null || matchingItem.label === "") {
+        generateLabelWarning(badgeContainer);
+        warningFlag = true;
+    }
+
+    // add hidden warning
+    if (matchingItem.inputType === "hidden") {
+        generateHiddenWarning(badgeContainer);
+        warningFlag = true;
+    }
+
 
     const badgeIcon = document.createElement("div");
     const badgeText = document.createElement("div");
 
-    badgeIcon.innerHTML = autocompleteStatus;
-    badgeText.innerHTML = `autocomplete: ${autocompleteVal}`;
+    console.log(`getting acstatus: ${matchingItem.id}`);
+    console.log(`acval: ${autocompleteVal}`);
+    console.log(`acfound: ${autocompleteFound}`);
+    console.log(`warningFlag: ${warningFlag}`);
+    
+    const autocompleteStatus = getAcStatus(autocompleteFound, autocompleteIsValidValue, autocompleteVal, labeledResults[0], acThreshold, warningFlag);
 
     switch (autocompleteStatus) {
-        case "✔":
+        case "✔ AC OK":
+            badgeIcon.innerHTML = "✔";
+            badgeText.innerHTML = `autocomplete: ${autocompleteVal}`;
             badgeIcon.className = "acc-icon acc-correct";
             badgeText.className = "acc-text acc-correct";
             break;
-        case "❕":
+        case "✔ NO AC NEEDED":
+            badgeIcon.innerHTML = "✔";
+            badgeText.innerHTML = "No autocomplete needed";
+            badgeIcon.className = "acc-icon acc-correct";
+            badgeText.className = "acc-text acc-correct";
+            break;
+        case "❕ AC WRONG":
+            badgeIcon.innerHTML = "❕";
+            badgeText.innerHTML = `autocomplete: ${autocompleteVal}`;
             badgeIcon.className = "acc-icon acc-info";
             badgeText.className = "acc-text acc-info";
             break;
-        default:
+        case "❕ AC FOUND":
+            badgeIcon.innerHTML = "❕";
+            badgeText.innerHTML = `autocomplete: ${autocompleteVal}`;
+            badgeIcon.className = "acc-icon acc-info";
+            badgeText.className = "acc-text acc-info";
+            break;
+        case "❕ NO AC FOUND":
+            badgeIcon.innerHTML = "❕";
+            badgeText.innerHTML = "No autocomplete needed";
+            badgeIcon.className = "acc-icon acc-info";
+            badgeText.className = "acc-text acc-info";
+            break;
+        case "❌ AC WRONG":
+            badgeIcon.innerHTML = "❌";
+            badgeText.innerHTML = `autocomplete: ${autocompleteVal}`;
             badgeIcon.className = "acc-icon acc-false";
             badgeText.className = "acc-text acc-false";
+            break;
     }
 
-    badgeContainer.appendChild(badgeIcon);
-    badgeContainer.appendChild(badgeText);
+    // insert icon and text at top position
+    // necesary, because they are dependent on the warning-flag
+    badgeContainer.insertBefore(badgeText, badgeContainer.firstChild);
+    badgeContainer.insertBefore(badgeIcon, badgeContainer.firstChild);
 
-
-    let autoLabelText;
-    if (labeledResults[0].acValue === autocompleteVal) {
-        autoLabelText = `${labeledResults[0].confidenceScore.toFixed(1)}`;
-    } else {
-        autoLabelText = `${labeledResults[0].acValue}: ${labeledResults[0].confidenceScore.toFixed(1)}`
-    }
-
-    const badgeClassificationLabel = document.createElement("div");
-    badgeClassificationLabel.classList.add("acc-classificationLabel", "acc-text");
-    badgeClassificationLabel.innerHTML = autoLabelText;
-
-    badgeContainer.appendChild(badgeClassificationLabel);
-
+    
+    generateInfoButton(badgeContainer, labeledResults);
 
     // only for devMode (db)
     const devModeObj = await chrome.storage.local.get(["acc.devMode"]);
@@ -96,31 +142,104 @@ export const generateAutocompleteBadge = async (
 
 }
 
-export const generateFloatingInfoTable = () => {
+const generatePredictionLabel = (parent: HTMLDivElement, prediction: matchingTableEntry, acVal: string, acThreshold: number, acFound: boolean) => {
+    let autoLabelText;
+    if (prediction.acValue === acVal) {
+        autoLabelText = `${prediction.confidenceScore.toFixed(1)}`;
+    } else if (prediction.confidenceScore <= acThreshold && !acFound) {
+        autoLabelText = `${(1 - prediction.confidenceScore).toFixed(1)}`;
+    } else {
+        autoLabelText = `${prediction.acValue}: ${prediction.confidenceScore.toFixed(1)}`
+    }
+
+    const badgeClassificationLabel = document.createElement("div");
+    badgeClassificationLabel.classList.add("acc-classificationLabel", "acc-text");
+    badgeClassificationLabel.innerHTML = autoLabelText;
+    parent.appendChild(badgeClassificationLabel);
+}
+
+const generateLabelWarning = (parent: HTMLDivElement) => {
+    const labelWarning = document.createElement("div");
+    labelWarning.innerHTML = "⚠ No label was found!";
+    labelWarning.classList.add("acc-text");
+    labelWarning.classList.add("acc-warning");
+    parent.appendChild(labelWarning);
+}
+
+const generateHiddenWarning = (parent: HTMLDivElement) => {
+    const hiddenWarning = document.createElement("div");
+    hiddenWarning.innerHTML = "⚠ Hidden Input";
+    hiddenWarning.classList.add("acc-text");
+    hiddenWarning.classList.add("acc-warning");
+    parent.appendChild(hiddenWarning);
+}
+
+const generateInfoButton = (parent: HTMLDivElement, results: matchingTable) => {
+    const infoButton = document.createElement("button");
+    infoButton.type = "button";
+    infoButton.innerHTML = "ℹ";
+    infoButton.title = "click to toggle detailed prediction results";
+    infoButton.classList.add("acc-info-button");
+    infoButton.addEventListener("click", (e) => {
+        //const boundingRect = (e.target as HTMLDivElement).getBoundingClientRect();
+        const boundingRect = parent.getBoundingClientRect();
+        toggleFloatingInfoTableAtPosition(boundingRect.left + window.scrollX, boundingRect.bottom + window.scrollY, results)
+    });
+    parent.appendChild(infoButton);
+}
+
+export const generateFloatingInfoTable = async () => {
     const floatingTableDiv = document.createElement("div");
     floatingTableDiv.id = "acc-floating-info";
-    floatingTableDiv.innerText = "testasdf";
+    floatingTableDiv.style.display = "none";
+
+    // set font size from settings
+    const fontSizeObj = await chrome.storage.local.get("acc.fontSize");
+    const fontSize = fontSizeObj["acc.fontSize"] as string;
+    floatingTableDiv.style.fontSize = fontSize;
+
+    // add escape listener to close table
+    document.addEventListener('keydown', (event) => {
+        if (event.key === "Escape" || event.key === "Esc") {
+            hideFloatingInfoTable();
+        }
+    });
+
     document.body.appendChild(floatingTableDiv);
 }
 
 export const removeFloatingInfoTable = () => {
     const floatingTableDivs = document.getElementById("acc-floating-info");
     floatingTableDivs?.remove();
+    // document.removeEventListener()  // currently not done, if there are other listeners
 }
 
-const showFloatingInfoTableAtPosition = (x: number, y: number, matchingTable: matchingTable) => {
+const hideFloatingInfoTable = () => {
+    const floatingTableDiv = document.getElementById("acc-floating-info");
+    if (floatingTableDiv === null) {
+        console.log("Floating table div not found, aborting!");
+        return;
+    }
+    floatingTableDiv.style.display = "none";
+}
+
+const toggleFloatingInfoTableAtPosition = (x: number, y: number, matchingTable: matchingTable) => {
     const floatingTableDiv = document.getElementById("acc-floating-info");
     if (floatingTableDiv === null) {
         console.log("Floating table div not found, aborting!");
         return;
     }
 
-    setFloatingInfoTableData(floatingTableDiv, matchingTable);
+    // toggle visibility
+    if (floatingTableDiv.style.display === "none") {
+        setFloatingInfoTableData(floatingTableDiv, matchingTable);
+        floatingTableDiv.style.left = `${x+4}px`;
+        floatingTableDiv.style.top = `${y+2}px`;
+        floatingTableDiv.style.display = "block";
+    } else {
+        hideFloatingInfoTable();
+    }
 
-    floatingTableDiv.style.left = `${x}px`;
-    // TODO ensure badge height is 22, otherwise do dynamically
-    floatingTableDiv.style.top = `${y+22}px`;
-    floatingTableDiv.style.display = "block";
 }
 
 const setFloatingInfoTableData = (div: HTMLElement, matchingTable: matchingTable) => {
@@ -153,31 +272,39 @@ const setFloatingInfoTableData = (div: HTMLElement, matchingTable: matchingTable
     div.appendChild(table);
 }
 
-const hideFloatingInfoTable = () => {
-    const floatingTableDiv = document.getElementById("acc-floating-info");
-    if (floatingTableDiv === null) {
-        console.log("Floating table div not found, aborting!");
-        return;
-    }
+const getAcStatus = (acFound: boolean, valExists: boolean, acVal: string, acPrediction: matchingTableEntry, acThreshold: number, warningFlag: boolean): acStatus => {
+    if (acPrediction.confidenceScore >= acThreshold) {
+        if (acFound) {
+            // possible valExists check here, but stage is effectively useless
 
-    floatingTableDiv.style.display = "none";
+            const acValAsList = stringToList(acVal);
+
+            if (acValAsList.includes(acPrediction.acValue)) {
+                return "✔ AC OK";
+            } else {
+                return "❕ AC WRONG";
+            }
+        } else {
+            return "❌ AC WRONG";
+        }
+    } else {
+        if (acFound) {
+            return "❕ AC FOUND";
+        } else {
+            if (warningFlag) {
+                return "❕ NO AC FOUND";
+            } else {
+                return "✔ NO AC NEEDED";
+            }
+        }
+    }
 }
 
-const getAcStatus = (acExists: boolean, valExists: boolean, acVal: string, acPrediction: matchingTableEntry): acStatus => {
-
-    if (!acExists) {
-        return "❌";
+const stringToList = (word: string) => {
+    if (word.split(" ").length >= 2) {
+        return word.split(" ");
     }
-
-    if (!valExists) {
-        return "❕";
-    }
-
-    if (acVal === acPrediction.acValue && acPrediction.confidenceScore >= 0.5) {
-        return "✔";
-    }
-    
-    return "❕";
+    return [word];
 }
 
 const generateDevModeUI = (
@@ -188,11 +315,18 @@ const generateDevModeUI = (
 
     const devModeUIDiv = document.createElement("div");
 
+    const tableGrid = document.createElement("table");
+    
+    const trAddToDb = document.createElement("tr");
+
+    const tdAddToDbLabel = document.createElement("td");
     const addToDBText = document.createElement("p");
     addToDBText.innerHTML = "add todb:";
     addToDBText.className = "acc.devModeText";
     addToDBText.style.padding = "4px";
-
+    tdAddToDbLabel.appendChild(addToDBText);
+    
+    const tdAddToDbInput = document.createElement("td");
     const addToDB = document.createElement("input");
     addToDB.type = "checkbox";
     addToDB.className = "acc.devModeInput"
@@ -213,12 +347,22 @@ const generateDevModeUI = (
             item.addToDB = (e.target as HTMLInputElement).checked
         }
     }
+    tdAddToDbInput.appendChild(addToDB);
 
+    trAddToDb.appendChild(tdAddToDbLabel);
+    trAddToDb.appendChild(tdAddToDbInput);
+    tableGrid.appendChild(trAddToDb);
+
+    const tracNeeded = document.createElement("tr");
+
+    const tdacNeededLabel = document.createElement("td");
     const acNeededText = document.createElement("p");
     acNeededText.innerHTML = "ac needed:";
     acNeededText.className = "acc.devModeText";
     acNeededText.style.padding = "4px";
+    tdacNeededLabel.appendChild(acNeededText);
 
+    const tdacNeededInput = document.createElement("td");
     const acNeeded = document.createElement("input");
     acNeeded.type = "checkbox";
     acNeeded.className = "acc.devModeInput"
@@ -239,12 +383,23 @@ const generateDevModeUI = (
             item.acNeeded = (e.target as HTMLInputElement).checked
         }
     }
+    tdacNeededInput.appendChild(acNeeded);
 
+    tracNeeded.appendChild(tdacNeededLabel);
+    tracNeeded.appendChild(tdacNeededInput);
+    tableGrid.appendChild(tracNeeded);
+
+    const trvalCorrect = document.createElement("tr");
+
+    const tdvalCorrectLabel = document.createElement("td");
     const valueCorrectText = document.createElement("p");
-    valueCorrectText.innerHTML = "value correct:";
+    valueCorrectText.innerHTML = "website value correct:";
     valueCorrectText.className = "acc.devModeText";
     valueCorrectText.style.padding = "4px";
+    tdvalCorrectLabel.appendChild(valueCorrectText);
 
+
+    const tdvalCorrectInput = document.createElement("td");
     const valueCorrect = document.createElement("input");
     valueCorrect.type = "checkbox";
     valueCorrect.className = "acc.devModeInput"
@@ -265,7 +420,22 @@ const generateDevModeUI = (
             item.valCorrect = (e.target as HTMLInputElement).checked
         }
     }
+    tdvalCorrectInput.appendChild(valueCorrect);
 
+    trvalCorrect.appendChild(tdvalCorrectLabel);
+    trvalCorrect.appendChild(tdvalCorrectInput);
+    tableGrid.appendChild(trvalCorrect);
+
+    const tractualVal = document.createElement("tr");
+
+    const tdactualValLabel = document.createElement("td");
+    const actualValueText = document.createElement("p");
+    actualValueText.innerHTML = "actual value:";
+    actualValueText.className = "acc.devModeText";
+    actualValueText.style.padding = "4px";
+    tdactualValLabel.appendChild(actualValueText);
+
+    const tdactualValInput = document.createElement("td");
     const actualValue = document.createElement("select");
     actualValue.className = "acc.devModeInput"
     for (const val of autocompleteDict.values) {
@@ -290,14 +460,14 @@ const generateDevModeUI = (
             item.actualVal = (e.target as HTMLInputElement).value
         }
     }
+    tdactualValInput.appendChild(actualValue);
+    tractualVal.appendChild(tdactualValLabel);
+    tractualVal.appendChild(tdactualValInput);
+    tableGrid.appendChild(tractualVal);
 
-    devModeUIDiv.appendChild(addToDBText);
-    devModeUIDiv.appendChild(addToDB);
-    devModeUIDiv.appendChild(acNeededText);
-    devModeUIDiv.appendChild(acNeeded);
-    devModeUIDiv.appendChild(valueCorrectText);
-    devModeUIDiv.appendChild(valueCorrect);
-    devModeUIDiv.appendChild(actualValue);
+
+    devModeUIDiv.appendChild(tableGrid);
+    devModeUIDiv.style.padding = "4px";
 
     return devModeUIDiv;
 }

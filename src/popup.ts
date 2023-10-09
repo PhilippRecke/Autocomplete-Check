@@ -1,3 +1,5 @@
+// currently not in use!
+
 // set the checkbox state when the popup is opened
 const highlightCheckbox = document.getElementById("chk.setHighlight") as HTMLInputElement | null;
 const highlightStateObj = chrome.storage.local.get(["acc.highlight"], items => {

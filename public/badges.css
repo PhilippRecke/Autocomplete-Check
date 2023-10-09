@@ -1,8 +1,19 @@
 .acc-badge {
-    margin: 0px 8px !important;
+    margin: 1px 4px !important;
+    padding: 0px !important;
     border-radius: 8px !important;
     box-shadow: 0px 0px 8px rgba(0, 0, 0, .2) !important;
-    display: inline-flex;
+    border: 0px !important;
+    background: white !important;
+    display: inline-flex !important;
+}
+
+.acc-badge.float {
+    position: absolute;
+}
+
+.acc-badge.inline{
+    position: static;
 }
 
 .acc-correct {
@@ -26,7 +37,7 @@
     height: auto !important;
     /* tint emojis (❌✔❕) */
     color: transparent !important; 
-    font-size: 10px !important;
+    /* font-size: 10px !important; */
     line-height: normal !important;
     background-color: white !important;
     border-radius: 8px 0px 0px 8px !important;
@@ -38,7 +49,7 @@
     margin: 0px !important;
     height: auto !important;
     color: white !important;
-    font-size: 10px !important;
+    /* font-size: 10px !important; */
     line-height: normal !important;
     border-radius: 0px 8px 8px 0px !important;
     display: flex;
@@ -48,8 +59,26 @@
     color: rgb(69, 69, 69) !important;
 }
 
+.acc-warning {
+    color: rgb(69, 69, 69) !important;
+}
+
 .acc-tmp-hover {
-    box-shadow: 0px 0px 12px rgba(225, 255, 0, 0.572) !important;
+    z-index: 9999;
+}
+
+.acc-info-button {
+    text-anchor: middle;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    margin: 4px;
+    background: rgb(220, 220, 220);
+}
+
+.acc-info-button:hover {
+    background: rgb(111, 111, 111);
 }
 
 #acc-floating-info {
@@ -58,9 +87,30 @@
     z-index: 9999 !important;
     background: white !important;
     color: black !important;
-    font-size: 10px !important; 
+    /* font-size: 10px !important; */
     line-height: normal !important;
     height: 200px;
     overflow-y: scroll !important;
     box-shadow: 0px 0px 8px rgba(0, 0, 0, .2) !important;
+}
+
+#acc-floating-info table {
+    padding: 0px !important;
+    margin: 8px !important;
+}
+
+#acc-floating-info th {
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+#acc-floating-info tr {
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+#acc-floating-info td {
+    padding: 0px !important;
+    margin: 0px !important;
+    line-height: normal !important;
 }

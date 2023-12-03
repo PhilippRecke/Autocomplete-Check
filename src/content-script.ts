@@ -189,7 +189,7 @@ const addCurrentFormToDB = async () => {
             item.acNeeded = false;
         } 
         if (item.valCorrect === undefined) {
-            item.acNeeded = false;
+            item.valCorrect = false;
         } 
     }
 

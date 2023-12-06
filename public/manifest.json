@@ -1,7 +1,7 @@
 {
     "name": "Autocomplete-Check",
     "description": "Easily check autocomplete values on input-elements",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "manifest_version": 3,
     "author": "Philipp Recke",  
     "homepage_url": "https://github.com/PhilippRecke/Autocomplete-Check",

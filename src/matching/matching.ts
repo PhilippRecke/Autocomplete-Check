@@ -1,4 +1,4 @@
-import { dbFieldItem } from '../db/dbtypes';
+import { dbFieldItem, dbFormItem } from '../db/dbtypes';
 import autocompleteDict from './autocomplete-dict.json';
 import { matchByFieldType, matchByFormType, matchById, matchByInputType, matchByLabel, matchByName, matchByPlaceholder, matchByTopResult } from './matchingclasses';
 import classesInfluence from "./matchingClassesInfluence.json"
@@ -96,29 +96,25 @@ type testResultsByClass = {
 
 type testResults = testResultsByClass[];
 
-export const analyzeForm = (data: matchingItem[]) => {
-    
-
-    // autocompleteValue.values;
-
-    // check individual field
-
-    // crosscheck fields (clashes with confidence delta >= 10, confidence >= 60)
-
-    /*
-    for (const item of data){
-        const labelResults = matchByLabel(item);
-        const fieldTypeResults = matchByFieldType(item);
-        const inputTypeResults =  matchByInputType(item);
-
-        const matchingTableResult = evaluateMatchingClassesResults({
-            labelResult: labelResults,
-            fieldTypeResult: fieldTypeResults,
-            inputTypeResult: inputTypeResults
-        });
-
+export const parseAllForms = (document: Document) => {
+    const forms = document.getElementsByTagName("form");
+    const tmpForms = [];
+    for (let i = 0; i < forms.length; i++) {
+        const tmpFormItem: dbFormItem = {
+            id: forms[i].id,
+            numOfLabeledFields: -1,
+            numOfFields: Array.from(document.querySelectorAll('input, textarea, select')).filter((item) => item.className !== "acc.devModeInput").length,  //TODO include counter for hidden/non visible items?
+            positionInForms: i,
+            headingTexts: getHeadingsOfForm(document, forms[i].id),
+            submitText: getSubmitTextOfForm(document, forms[i].id),
+            autocomplete: forms[i].getAttribute("autocomplete"),
+            fields: []
+        };
+        
+        tmpForms.push(tmpFormItem);
     }
-    */
+
+    return tmpForms;
 }
 
 export const analyzeField = (data: matchingItem) => {
@@ -336,7 +332,7 @@ const weighTestResults = (testResults: testResults) => {
 
 
 
-const getHeadingsOfForm = (doc: Document, formId?: string) => {
+export const getHeadingsOfForm = (doc: Document, formId?: string) => {
     const headings: string[] = [];
 
     if (formId === undefined) {
@@ -362,6 +358,31 @@ const getHeadingsOfForm = (doc: Document, formId?: string) => {
     }
 
     return headings;
+}
+
+export const getSubmitTextOfForm = (doc: Document, formId?: string) => {
+    if (formId === undefined) {
+        return null;
+    }
+
+    const form = doc.getElementById(formId);
+    if (form === null) {
+        return null;
+    }
+
+    for (const element of ["input", "button"]) {
+        const item = form.getElementsByTagName(element);
+        for (const h of item) {
+            if (h.getAttribute("type") === "submit"){
+                if (h.getAttribute("value") !== null) {
+                    return h.getAttribute("value");
+                }
+                return h.innerHTML;
+            }
+        }
+    }
+
+    return null;
 }
 
 const isElementInsideTableCell = (element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement) => {

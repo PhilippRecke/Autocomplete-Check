@@ -1,7 +1,7 @@
 import { generateAutocompleteBadge } from "./badge/badge";
-import { generateMatchingItem, matchingItem, matchingTable } from "./matching/matching";
+import { generateMatchingItem, matchingItem, matchingTable, getHeadingsOfForm, getSubmitTextOfForm, parseAllForms } from "./matching/matching";
 import { generateFloatingInfoTable, removeFloatingInfoTable } from "./badge/badge"
-import { dbFieldItem, dbFormItem, dbSiteItemNoForms } from "./db/dbtypes";
+import { dbFieldItem, dbFormItem, dbSiteItem, dbSiteItemNoForms } from "./db/dbtypes";
 
 export type matchingItemWithId = {
     addToDB: boolean | undefined,
@@ -184,10 +184,10 @@ const getParentFormIdAndName = (element: HTMLInputElement | HTMLTextAreaElement 
     for (let i = 0; i < forms.length; i++) {
         const form = forms[i];
         if (form.contains(element)) {
-            const tmpFormItem: dbFormItem = {id: form.id, numOfLabeledFields: -1, numOfFields: -1, positionInForms: i, };
             return {id: form.id, name: form.name};
         }
     }
+    //backup, if element is outside form, but has form tag
     let formVal = element.getAttribute("form");
     if (formVal !== null) {
         const form = document.getElementById(formVal) as HTMLFormElement;
@@ -219,36 +219,39 @@ const addCurrentFormToDB = async () => {
         return dbFieldItem
     });
 
-    const uniqueFormIds = [... new Set(hydratedData.map((field) => (field.formId)))];
+    const uniqueFormIds = [... new Set(hydratedData.map((field) => (field.formId)))].filter((id) => id !== null && id !== undefined);
 
-    const generateFormById = (id: string | null) => {
-        const formItem: dbFormItem = {
-            id: id,
-            numOfLabeledFields: -1,
-            numOfFields: -1,
-            positionInForms: -1,
-            headingTexts:null,
-            submitText: null,
-            autocomplete: null,
+    const allForms = parseAllForms(document);
+    const hydratedForms: dbFormItem[] = [];
 
-            fields: hydratedData.filter((item) => item.formId === id)
+    // postprocess forms, fill in fields
+    for (const form of allForms) {
+        //TODO check what happens if there is no id in form (maybe generate tmpFormId from name/...?)
+        if (uniqueFormIds.includes(form.id)) {
+            const tmpFields = hydratedData.filter((field) => field.formId === form.id);
+            form.fields = tmpFields;
+            form.numOfLabeledFields = tmpFields.length
         }
+        hydratedForms.push(form);
     }
 
-    // TODO swap with version that supports forms
-    const dbItemNoForms: dbSiteItemNoForms = {
-        dataVersion: 1,
+    const dbItem: dbSiteItem = {
+        dataVersion: 2,
         url: window.location.href,
         date: new Date().toJSON(),  // 1975-08-19T23:15:30.000Z
         hostname: window.location.hostname,  // e.g. hdm-stuttgart.de
         htmlLanguage: document.documentElement.lang,
         htmlTitle: document.title,
         dom: document.documentElement.outerHTML,
-        fields: hydratedData,
-        numOfLabeledFields: hydratedData.length
+        forms: hydratedForms,
+        looseFields: hydratedData.filter((item) => !uniqueFormIds.includes(item.formId)),
+        numOfLabeledFields: hydratedData.length,
+        numOfFields: Array.from(document.querySelectorAll('input, textarea, select')).filter((item) => item.className !== "acc.devModeInput").length, //TODO add indicator, how many of these are invisible, ...?
+        numOfLabeledForms: hydratedForms.filter((form) => form.fields.length > 0).length,
+        numOfForms: hydratedForms.length
     }
 
-    const response = await chrome.runtime.sendMessage({ msg: "acc.addFormToDB", data: dbItemNoForms });
+    const response = await chrome.runtime.sendMessage({ msg: "acc.addFormToDB", data: dbItem });
     
     console.log(`acc-extension: ${response}`);
 

@@ -1,7 +1,7 @@
 import { generateAutocompleteBadge } from "./badge/badge";
 import { generateMatchingItem, matchingItem, matchingTable } from "./matching/matching";
 import { generateFloatingInfoTable, removeFloatingInfoTable } from "./badge/badge"
-import { dbSiteItemNoForms } from "./db/dbtypes";
+import { dbFieldItem, dbFormItem, dbSiteItemNoForms } from "./db/dbtypes";
 
 export type matchingItemWithId = {
     addToDB: boolean | undefined,
@@ -28,11 +28,14 @@ const setHighlighting = async () => {
     // const response = await chrome.runtime.sendMessage({ msg: "acc.updateBadgeText" });
 
     //TODO check which shall be retrieved
-    const inputElements = document.getElementsByTagName("input");
-    const inputElements2 = document.getElementsByTagName("textarea");
-    const inputElements3 = document.getElementsByTagName("select");
+    //const inputElements = document.getElementsByTagName("input");
+    //const inputElements2 = document.getElementsByTagName("textarea");
+    //const inputElements3 = document.getElementsByTagName("select");
+    //const combinedElements = [...inputElements, ...inputElements2, ...inputElements3];
+    const combinedElements = Array.from(document.querySelectorAll('input, textarea, select')) as Array<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>;
 
-    const combinedElements = [...inputElements, ...inputElements2, ...inputElements3];
+    //dict to store position of filed inside individual forms <formId, numOfFieldsYet>
+    const formsPositions: Record<string, number> = {};
 
     if (currentHighlightState) {
 
@@ -74,9 +77,20 @@ const setHighlighting = async () => {
                 continue;
             }
 
+            let posInForm = -1;
+            if (parentFormIdAndName?.id !== undefined){
+                if (formsPositions[parentFormIdAndName.id] === undefined) {
+                    formsPositions[parentFormIdAndName.id] = 0;
+                    posInForm = 0;
+                } else {
+                    const newPosition = formsPositions[parentFormIdAndName.id] + 1;
+                    formsPositions[parentFormIdAndName.id] = newPosition;
+                    posInForm = newPosition;
+                }
+            }
 
             // analyze item
-            const matchingItem = generateMatchingItem(element, document, i, parentFormIdAndName?.id, -1);
+            const matchingItem = generateMatchingItem(element, document, i, posInForm, parentFormIdAndName?.id);
 
             // do plugin auto classification
             const classificationResult = await chrome.runtime.sendMessage({ msg: "acc.classifyField", data: matchingItem });
@@ -164,10 +178,13 @@ const getNewBadgeId = async () => {
     return `acc-badgeNo${newIdCounter}`;
 }
 
+//TODO generate more form data
 const getParentFormIdAndName = (element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement) => {
     const forms = document.getElementsByTagName("form");
-    for (const form of forms) {
+    for (let i = 0; i < forms.length; i++) {
+        const form = forms[i];
         if (form.contains(element)) {
+            const tmpFormItem: dbFormItem = {id: form.id, numOfLabeledFields: -1, numOfFields: -1, positionInForms: i, };
             return {id: form.id, name: form.name};
         }
     }
@@ -201,6 +218,22 @@ const addCurrentFormToDB = async () => {
         } 
         return dbFieldItem
     });
+
+    const uniqueFormIds = [... new Set(hydratedData.map((field) => (field.formId)))];
+
+    const generateFormById = (id: string | null) => {
+        const formItem: dbFormItem = {
+            id: id,
+            numOfLabeledFields: -1,
+            numOfFields: -1,
+            positionInForms: -1,
+            headingTexts:null,
+            submitText: null,
+            autocomplete: null,
+
+            fields: hydratedData.filter((item) => item.formId === id)
+        }
+    }
 
     // TODO swap with version that supports forms
     const dbItemNoForms: dbSiteItemNoForms = {

@@ -7,7 +7,7 @@ test('substring full match', async () => {
         id: null,
 
         formId: null,
-        positionInForm: null,
+        positionInForm: -1,
         formHeadings: null,
         positionInFields: -1,
         label: "Telefonnummer",

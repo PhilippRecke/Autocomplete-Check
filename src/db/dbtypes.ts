@@ -12,7 +12,9 @@ export type dbSiteItem = {
     looseFields: dbFieldItem[];
 
     numOfLabeledFields: number;
+    numOfFields: number;
     numOfLabeledForms: number;
+    numOfForms: number;
 }
 
 export type dbSiteItemNoForms = {
@@ -33,6 +35,7 @@ export type dbSiteItemNoForms = {
 export type dbFormItem = {
     id: string | null;
     numOfLabeledFields: number;
+    numOfFields: number;
     positionInForms: number;
     headingTexts: string[] | null;  // text-content of headings inside form
     submitText: string  | null;
@@ -45,9 +48,9 @@ export type dbFieldItem = {
     id: string | null;
 
     formId: string | null;
-    positionInForm: number | null;
+    positionInForm: number;
     formHeadings: string[] | null;
-    positionInFields: number;
+    positionInFields: number; //global position in all inputs/textareas/selects on site
 
     label: string | null;
     name: string | null;

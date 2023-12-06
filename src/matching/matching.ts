@@ -35,7 +35,7 @@ type matchResult = {
 }
 
 
-export const generateMatchingItem = (input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, document: Document, posInFields: number, formId?: string, posInForm?: number) => {
+export const generateMatchingItem = (input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, document: Document, posInFields: number, posInForm: number, formId?: string) => {
 
     const labelList = [...document.getElementsByTagName('label')]
         .filter(label => label.htmlFor == input.id);
@@ -55,7 +55,7 @@ export const generateMatchingItem = (input: HTMLInputElement | HTMLTextAreaEleme
         id: input.id,
 
         formId: formId? formId : null,
-        positionInForm: posInForm? posInForm : null,
+        positionInForm: posInForm,
         formHeadings: getHeadingsOfForm(document, formId),
         positionInFields: posInFields,
         label: labelList[0]?.textContent?.trim() ?? null,
@@ -68,7 +68,7 @@ export const generateMatchingItem = (input: HTMLInputElement | HTMLTextAreaEleme
         ariaHidden: input.getAttribute("aria-hidden") as boolean | null,
         inputType: input.type as inputType, //TODO error, when invalid type?
         fieldType: input.tagName.toLowerCase(),
-        isInTable: input.getAttribute("disabled") as boolean | null,
+        isInTable: isElementInsideTableCell(input),
         autocomplete: input.getAttribute("autocomplete"),
         correctAutocomplete: null,
 
@@ -363,3 +363,14 @@ const getHeadingsOfForm = (doc: Document, formId?: string) => {
 
     return headings;
 }
+
+const isElementInsideTableCell = (element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement) => {
+    let tmpElement: HTMLElement | null = element;
+    while (tmpElement && tmpElement.tagName !== 'HTML') {
+      if (tmpElement.tagName === 'TD') {
+        return true; // The element is inside a table cell
+      }
+      tmpElement = tmpElement.parentNode as HTMLElement;
+    }
+    return false; // The element is not inside a table cell
+  }

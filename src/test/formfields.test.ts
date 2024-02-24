@@ -26,6 +26,11 @@ test('current-password field type prediction', async () => {
     expect(matchingTableResult[0].acValue).toBe("current-password");
 });
 
+test('countries field type prediction', async () => {
+    const matchingTableResult = await testElementWithId("countries");
+    expect(matchingTableResult[0].acValue).toBe("country");
+});
+
 const testElementWithId = async (id: string) => {
     type acceptedTypes = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
     const element = myDocument.getElementById(id) as acceptedTypes;

@@ -26,7 +26,15 @@ test('substring empty wordpart', async () => {
     expect(substringSearchResult).toBe("none");
 });
 
-// TODO substring partial/reverse partial
+test('substring partial', async () => {
+    const substringSearchResult = substringSearch(["telefonnummer"], "Telefon");
+    expect(substringSearchResult).toBe("partial");
+});
+
+test('substring reverse-partial', async () => {
+    const substringSearchResult = substringSearch(["telefon"], "Telefonzelle");
+    expect(substringSearchResult).toBe("reverse-partial");
+});
 
 
 

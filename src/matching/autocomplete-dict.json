@@ -1025,8 +1025,7 @@
             "maand"
         ],
         "40": [
-            "geboortejaar",
-            "jaar"
+            "geboortejaar"
         ],
         "41": [
             "geslacht",
@@ -1065,7 +1064,7 @@
             "mobiel",
             "gsm",
             "werktelefoon",
-            "thuisnummer",
+            "thuisnummer"
         ],
         "45": [
             "landcode",
@@ -1131,7 +1130,6 @@
     "byFormType_NL": {
         "login": [
             "login",
-            "log in",
             "inloggen",
             "aanloggen",
             "aanmelden"

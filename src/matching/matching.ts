@@ -269,7 +269,8 @@ const updateTestResults = (testResults: testResults, newResults: matchByTopResul
             if (!newResults.find(r => r.id === key)) {
                 tmpResults.push({
                     id: key,
-                    confidence: 0
+                    confidence: 0,
+                    numOfLanguageMatches: 0
                 });
             }
         }

@@ -16,8 +16,10 @@ You may skip building the plugin yourself, by downloading the shipped "/dist"-fo
 5. enable Developer mode (switch at top right)
 6. click "Load unpacked" and select "/dist"-folder
 
-
 ## Setup Development-Environment
 1. clone repo
 2. make sure TypeScript is installed
 3. run `npm install`
+
+## Translations
+Special thanks to [Roel](https://github.com/roelvangils) from [Eleven Ways](https://elevenways.be/en) for providing dutch (and belgian dutch) translations / keywords!
